@@ -22,6 +22,8 @@ waste_collection_schedule:
 - `alb_donau`: <https://buerger-portal-albdonaukreisabfallwirtschaft.azurewebsites.net>
 - `biedenkopf`: <https://biedenkopfmzv.buergerportal.digital>
 - `cochem_zell`: <https://buerger-portal-cochemzell.azurewebsites.net>
+- `bedburg`: <https://buerger-portal-bedburg.azurewebsites.net>
+- 'klevestadt' : <https://buerger-app-klevestadt.azurewebsites.net>
 
 ### Configuration Variables
 

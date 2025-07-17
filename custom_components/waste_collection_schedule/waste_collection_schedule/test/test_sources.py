@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-SECRET_FILENAME = "secrets.yaml"
+SECRET_FILENAME = Path(__file__).resolve().parent / "secrets.yaml"
 SECRET_REGEX = re.compile(r"!secret\s(\w+)")
 
 
@@ -21,6 +21,12 @@ def main():
     )
     parser.add_argument(
         "-l", "--list", action="store_true", help="List retrieved entries"
+    )
+    parser.add_argument(
+        "-d",
+        "--double",
+        action="store_true",
+        help="Run the fetch method twice and check that the second result is the same as the first one, should be run if fetching modifies the source object",
     )
     parser.add_argument(
         "-i", "--icon", action="store_true", help="Show waste type icon"
@@ -127,6 +133,22 @@ def test_fetch(module, name, tc, args):
     try:
         source = module.Source(**tc)
         result = source.fetch()
+        if args.double:
+            result2 = source.fetch()
+            if result != result2:
+                print(
+                    f"{bcolors.FAIL}  ERROR: source.fetch() does not return the same result on second call"
+                )
+                for collection in result:
+                    try:
+                        idx = result2.index(collection)
+                        result2.pop(idx)
+                    except ValueError:
+                        print(f"  {collection} not in second result")
+                for collection in result2:
+                    print(f"  {collection} not in first result")
+                print(bcolors.ENDC, end="")
+
         count = len(result)
         if count > 0:
             print(f"  found {bcolors.OKGREEN}{count}{bcolors.ENDC} entries for {name}")

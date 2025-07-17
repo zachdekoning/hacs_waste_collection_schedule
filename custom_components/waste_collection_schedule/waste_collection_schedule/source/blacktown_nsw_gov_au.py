@@ -25,8 +25,8 @@ TEST_CASES = {
     "Workers Blacktown": {
         "post_code": "2148",
         "suburb": "Blacktown",
-        "street_name": "Campbell St",
-        "street_number": "55",
+        "street_name": "Campbell Street",
+        "street_number": "18",
     },
     "Hythe St": {
         "post_code": "2770",
@@ -41,7 +41,12 @@ API_URLS = {
     "collection": "https://www.blacktown.nsw.gov.au/ocapi/Public/myarea/wasteservices?geolocationid={}&ocsvclang=en-AU",
 }
 
-HEADERS = {"user-agent": "Mozilla/5.0"}
+HEADERS = {
+    "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+    "accept": "application/json, text/javascript, */*; q=0.01",
+    "Referer": "https://www.blacktown.nsw.gov.au/My-Neighbourhood",
+}
+
 
 ICON_MAP = {
     "General Waste": "trash-can",
@@ -59,6 +64,8 @@ class Source:
         self.street_number = street_number
 
     def fetch(self):
+        session = requests.Session()
+        session.headers.update(HEADERS)
         locationId = 0
 
         address = "{} {} {} NSW {}".format(
@@ -68,7 +75,7 @@ class Source:
         q = requote_uri(str(API_URLS["address_search"]).format(address))
 
         # Retrieve suburbs
-        r = requests.get(q, headers=HEADERS)
+        r = session.get(q)
 
         data = json.loads(r.text)
 
@@ -85,7 +92,7 @@ class Source:
         # Retrieve the upcoming collections for our property
         q = requote_uri(str(API_URLS["collection"]).format(locationId))
 
-        r = requests.get(q, headers=HEADERS)
+        r = session.get(q)
 
         data = json.loads(r.text)
 

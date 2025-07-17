@@ -55,6 +55,7 @@ Currently the following service providers are supported:
 - [North Adelaide Waste Management Authority, South Australia](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/nawma_sa_gov_au.md)
 - [RecycleSmart](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/recyclesmart.md)
 - [Stonnington City Council, Melbourne](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/stonnington_vic_gov_au.md)
+- [Sunshine Coast, Queensland](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/sunshinecoast_qld_gov_au.md)
 - [The Hills Council, Sydney](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/thehills_nsw_gov_au.md)
 - [Wyndham City Council, Melbourne](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/sourcewyndham_vic_gov_au.md)
 
@@ -200,6 +201,7 @@ Currently the following service providers are supported:
 - [Middlesbrough Council - middlesbrough.gov.uk](https://www.middlesbrough.gov.uk/bin-collection-dates)
 - [Newcastle City Council - newcastle.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/newcastle_gov_uk.md)
 - [North Somerset Council - n-somerset.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/nsomerset_gov_uk.md)
+- [North West Leicestershire - nwleics.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/nwleics_gov_uk.md)
 - [Nottingham City Council - nottinghamcity.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/nottingham_city_gov_uk.md)
 - [Peterborough City Council - peterborough.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/peterborough_gov_uk.md)
 - [Reading Council - reading.gov.uk](https://github.com/mampfes/hacs_waste_collection_schedule/blob/master/doc/source/reading_gov_uk.md)

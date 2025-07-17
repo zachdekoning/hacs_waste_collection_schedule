@@ -24,7 +24,7 @@ waste_collection_schedule:
 *(string) (required)*
 
 **street**  
-*(integer) (optional, depends on customer)*
+*(string) (optional, depends on customer)*
 
 **housenumber**  
 *(integer) (optional, depends on customer)*
@@ -64,6 +64,7 @@ List of customers (2021-07-09):
 - `ffb`: AWB Landkreis Fürstenfeldbruck
 - `fulda`: Landkreis Fulda
 - `fulda-stadt`: Stadt Fulda
+- `gifhorn`: Landkreis Gifhorn
 - `gotha`: Landkreis Gotha
 - `kaufbeuren`: Stadt Kaufbeuren
 - `kaw-guenzburg`: Landkreis Günzburg
@@ -72,15 +73,17 @@ List of customers (2021-07-09):
 - `kronach`: Landkreis Kronach
 - `kulmbach`: Landkreis Kulmbach
 - `landkreisbetriebe`: Landkreisbetriebe Neuburg-Schrobenhausen
+- `lkgi`: Landkreis Gießen
 - `lra-ab`: Landkreis Aschaffenburg
 - `lra-dah`: Landratsamt Dachau
 - `lra-mue`: Landkreis Mühldorf a. Inn
+- `lra-regensburg`: Landratsamt Regensburg
 - `lra-schweinfurt`: Landkreis Schweinfurt
 - `memmingen`: Stadt Memmingen
 - `neustadt`: Neustadt a.d. Waldnaab
 - `pullach`: Pullach im Isartal
 - `regensburg`: Stadt Regensburg
-- `rmk`: Abfallwirtschaft Rems-Murr
+- `rmk`: Abfallwirtschaft Rems-Murr (AWRM) - AWIDO Version
 - `rosenheim`: Landkreis Rosenheim
 - `roth`: Landkreis Roth
 - `tuebingen`: Landkreis Tübingen
@@ -93,7 +96,7 @@ List of customers (2021-07-09):
 
 ### city, street, house number
 
-- Go to your calendar at `https://awido.cubefour.de/Customer/<customer>/v2/Calendar2.aspx`. Replace `<customer>` with the one of the keys listed above.
+- Go to your calendar at `https://awido.cubefour.de/Customer/<customer>/v2/Calendar2.aspx` (old version) or `https://awido.cubefour.de/Customer/<customer>/v3/Calendar2.aspx` (new version). Replace `<customer>` with the one of the keys listed above.
 - Enter your city name from the first page into the `city` field.
 - If you have to enter a street or district, enter the name into the `street` field.
 - If you have to enter a house number, enter the house number into the `housenumber` field.

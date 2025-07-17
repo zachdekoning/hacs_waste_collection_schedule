@@ -1,19 +1,30 @@
-import datetime
-import json
 import logging
+from datetime import date, datetime, timedelta
 
 import requests
+from dateutil.rrule import DAILY, rrule
 from waste_collection_schedule import Collection  # type: ignore[attr-defined]
+from waste_collection_schedule.exceptions import (
+    SourceArgumentNotFoundWithSuggestions,
+    SourceArgumentRequired,
+)
 
 TITLE = "AWB Bad Kreuznach"
 DESCRIPTION = "Source for AWB Bad Kreuznach."
-URL = "https://app.awb-bad-kreuznach.de/"
-NEW_URL = "https://blupassionsystem.de/city/rest/garbageregion/filterRegion"
+URL = "https://blupassionsystem.de/city/rest/garbageregion/filterRegion"
 TEST_CASES = {
     "Hargesheim": {"ort": "Hargesheim"},
-    "Bad Kreuznach": {"ort": "Bad Kreuznach", "strasse": "adalbert-stifter-straße", "nummer": "3"},
-    "Bad Kreuznach OT Bad Münster-Ebernburg": {"ort": "Bad Kreuznach OT Bad Münster-Ebernburg", "strasse": "am Götzenfels"},
+    "Bad Kreuznach": {
+        "ort": "Bad Kreuznach",
+        "strasse": "adalbert-stifter-straße",
+        "nummer": "3",
+    },
+    "Bad Kreuznach OT Bad Münster-Ebernburg": {
+        "ort": "Bad Kreuznach OT Bad Münster-Ebernburg",
+        "strasse": "am Götzenfels",
+    },
     "Stromberg": {"ort": "Stromberg", "stadtteil": "Schindeldorf"},
+    "Altenbamberg": {"ort": "Altenbamberg"},
 }
 
 TYPES = ("restmuell", "bio", "wert", "papier")
@@ -32,7 +43,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 def compare_str(a: str, b: str):
-    return a.lower().replace(" ", "").replace("-", "") == b.lower().replace("-", "").replace(" ", "")
+    return a.lower().replace(" ", "").replace("-", "") == b.lower().replace(
+        "-", ""
+    ).replace(" ", "")
 
 
 class Source:
@@ -42,11 +55,19 @@ class Source:
         self._strasse = strasse if strasse else None
         self._nummer = str(nummer) if nummer else None
 
-    def fetch_new_app(self):
-        params = {"active": True, "appId": 44, "hugeDataInfo": "", "regionId": None,
-                  "cityId": None, "streetId": None, "partOfCityId": None, "districtId": None}
+    def fetch(self):
+        params = {
+            "active": True,
+            "appId": 44,
+            "hugeDataInfo": "",
+            "regionId": None,
+            "cityId": None,
+            "streetId": None,
+            "partOfCityId": None,
+            "districtId": None,
+        }
 
-        r = requests.post(NEW_URL, json=params)
+        r = requests.post(URL, json=params)
         r.raise_for_status()
         data = r.json()
 
@@ -55,7 +76,7 @@ class Source:
         if "regions" in data["data"]:
             params["regionId"] = data["data"]["regions"][0]["id"]
 
-        r = requests.post(NEW_URL, json=params)
+        r = requests.post(URL, json=params)
         r.raise_for_status()
         data = r.json()
 
@@ -67,16 +88,18 @@ class Source:
                 break
 
         if not found:
-            raise ValueError("Ort not found")
+            SourceArgumentNotFoundWithSuggestions(
+                "ort", self._ort, [city["name"] for city in data["data"]["citys"]]
+            )
 
-        r = requests.post(NEW_URL, json=params)
+        r = requests.post(URL, json=params)
         r.raise_for_status()
         data = r.json()
 
         if data["data"]["partOfCitys"] != []:
-            if self._stadtteil == None:
-                raise ValueError("Stadtteil required")
-        elif self._stadtteil != None:
+            if self._stadtteil is None:
+                raise SourceArgumentRequired("stadtteil")
+        elif self._stadtteil is not None:
             LOGGER.warning("stadtteil provided but not needed")
 
         if data["data"]["partOfCitys"]:
@@ -89,16 +112,23 @@ class Source:
                     break
 
             if not found:
-                raise ValueError("Stadtteil not found")
+                raise SourceArgumentNotFoundWithSuggestions(
+                    "stadtteil",
+                    self._stadtteil,
+                    [
+                        part_of_city["name"]
+                        for part_of_city in data["data"]["partOfCitys"]
+                    ],
+                )
 
-        r = requests.post(NEW_URL, json=params)
+        r = requests.post(URL, json=params)
         r.raise_for_status()
         data = r.json()
 
         if data["data"]["streets"] != []:
-            if self._strasse == None:
-                raise ValueError("strasse required")
-        elif self._strasse != None:
+            if self._strasse is None:
+                raise SourceArgumentRequired("strasse")
+        elif self._strasse is not None:
             LOGGER.warning("strasse provided but not needed")
 
         if data["data"]["streets"]:
@@ -109,16 +139,20 @@ class Source:
                     found = True
                     break
             if not found:
-                raise ValueError("Strasse not found")
+                raise SourceArgumentNotFoundWithSuggestions(
+                    "strasse",
+                    self._strasse,
+                    [street["name"] for street in data["data"]["streets"]],
+                )
 
-        r = requests.post(NEW_URL, json=params)
+        r = requests.post(URL, json=params)
         r.raise_for_status()
         data = r.json()
 
         if data["data"]["houseNumbers"] != []:
-            if self._nummer == None:
-                raise ValueError("nummer required")
-        elif self._nummer != None:
+            if self._nummer is None:
+                raise SourceArgumentRequired("nummer")
+        elif self._nummer is not None:
             LOGGER.warning("nummer provided but not needed")
 
         if data["data"]["houseNumbers"]:
@@ -129,82 +163,78 @@ class Source:
                     found = True
                     break
             if not found:
-                raise ValueError("Nummer not found")
+                raise SourceArgumentNotFoundWithSuggestions(
+                    "nummer",
+                    self._nummer,
+                    [
+                        house_number["name"]
+                        for house_number in data["data"]["houseNumbers"]
+                    ],
+                )
 
-        from_time = datetime.datetime.now()
-        from_time = from_time.replace(
-            hour=0, minute=0, second=0, microsecond=0)
-        from_time = from_time - datetime.timedelta(days=1)
+        from_time = datetime.now()
+        from_time = from_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        from_time = from_time - timedelta(days=1)
 
-        to_time = from_time + datetime.timedelta(days=365)
+        to_time = from_time + timedelta(days=365)
 
         params["fromTime"] = int(from_time.timestamp() * 1000)
         params["toTime"] = int(to_time.timestamp() * 1000)
 
         header = {"Accept": "application/json, text/plain, */*"}
 
-        # r = requests.get("https://blupassionsystem.de/city/rest/garbagestation/getNameRegion", params=params, headers=header)
-        # r.raise_for_status()
         r = requests.get(
-            "https://blupassionsystem.de/city/rest/garbagestation/getAllGarbageCalendar", params=params, headers=header)
+            "https://blupassionsystem.de/city/rest/garbageorte/getAllGarbageCalendar",
+            params=params,
+            headers=header,
+        )
         r.raise_for_status()
-
         data = r.json()
 
         if "data" not in data or "calendars" not in data["data"]:
             raise ValueError("Unexpected response")
 
+        collection_dates: dict[str, list[date]] = {}
+
         entries = []
         for cal_entry in data["data"]["calendars"]:
-            entries.append(Collection(datetime.date.fromtimestamp(
-                cal_entry["fromDate"] / 1000), cal_entry["name"], ICON_MAP.get(cal_entry["name"])))
+            collection_dates[cal_entry["name"]] = list(
+                d.date()
+                for d in rrule(
+                    freq=DAILY,
+                    interval=cal_entry["frequency"],
+                    dtstart=datetime.fromtimestamp(cal_entry["fromDate"] / 1000),
+                    until=datetime.fromtimestamp(cal_entry["toDate"] / 1000)
+                    if cal_entry["toDate"]
+                    else to_time,
+                )
+            )
 
-        return entries
+        moved: list[(str, date)] = []
 
-    def fetch(self):
-        try:
-            to_return = self.fetch_new_app()
-        except Exception as e:
-            LOGGER.warning(
-                "Error fetching new app: with Exception '%s' using old method", e)
-            try:
-                to_return = self.old_fetch()
-            except Exception as e2:
-                LOGGER.warning(
-                    "Error fetching old app: with Exception '%s' raising Exception from new API", e2)
-                raise e
+        for holiday in data["data"]["holidayViews"]:
+            holiday_date = datetime.fromtimestamp(holiday["holiday"] / 1000).date()
+            for collection_name, collections in collection_dates.items():
+                for collection in collections:
+                    if (
+                        collection == holiday_date
+                        and not (collection_name, collection) in moved
+                    ):
+                        new_date = datetime.fromtimestamp(
+                            holiday["shiftTo"] / 1000
+                        ).date()
+                        moved.append((collection_name, new_date))
+                        collections[collections.index(collection)] = new_date
+                        break
 
-        return to_return
-
-    def old_fetch(self):
-        args = {
-            "ort": self._ort,
-            "strasse": self._strasse,
-            "nummer": self._nummer,
-        }
-
-        # get latitude/longitude file
-        r = requests.post(
-            "https://app.awb-bad-kreuznach.de/api/checkAddress.php", data=args
-        )
-        data = json.loads(r.text)
-
-        # get dates
-        del args["nummer"]
-        args["mode"] = "web"
-        args["lat"] = data["lat"]
-        args["lon"] = data["lon"]
-        r = requests.post(
-            "https://app.awb-bad-kreuznach.de/api/loadDates.php", data=args
-        )
-        data = json.loads(r.text)
-
-        entries = []
-
-        for d in data["termine"]:
-            date = datetime.date.fromisoformat(d["termin"])
-            for type in TYPES:
-                if d[type] != "0":
-                    entries.append(Collection(date, type, date))
+        for name, collections in collection_dates.items():
+            for collection_date in collections:
+                entries.append(
+                    Collection(
+                        collection_date,
+                        name,
+                        ICON_MAP.get(name),
+                    )
+                )
 
         return entries

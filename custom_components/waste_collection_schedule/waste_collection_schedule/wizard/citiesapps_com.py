@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import site
 from pathlib import Path
+from datetime import datetime
 
 import inquirer
 
@@ -9,7 +10,7 @@ site.addsitedir(str(package_dir))
 
 import waste_collection_schedule.service.CitiesAppsCom as CitiesAppsCom  # noqa: E402
 
-app = CitiesAppsCom.CitiesApps()
+app = None
 
 
 def ask_city():
@@ -29,16 +30,21 @@ def ask_city():
     return [city_id, city]
 
 
-def ask_calendar(city_id, allow_search=True):
+def ask_calendar(city_id):
     calendars = app.get_garbage_calendars(city_id)
+
+    calendar_name_entry = "name"
+
+    if calendars["is_v2"]:
+        calendar_name_entry = "street"
+
     if len(calendars) == 1:
         print("# Only one calendar found, using that one")
-        cal = calendars[0]["name"]
+        cal = calendars[0]["data"][calendar_name_entry]
     else:
-        choices = [c["name"] for c in calendars]
+        choices = [c[calendar_name_entry] for c in calendars["data"]]
         choices.sort()
-        if allow_search:
-            choices = ["Search By Street", *choices]
+
         questions = [
             inquirer.List(
                 "cal",
@@ -51,31 +57,28 @@ def ask_calendar(city_id, allow_search=True):
     return cal
 
 
-def ask_by_street(city_id):
-    streets = app.get_streets(city_id)
-    if not streets["streets"]:
-        print("City does not support searching by street")
-        return ask_calendar(city_id, allow_search=False)
-
-    streetlist = streets["streets"]
-
-    streetlist.sort(key=lambda d: d["full_names"])
-    calendars = {
-        s_cal["garbage_areaid"]: s_cal["name"] for s_cal in streets["calendars"]
-    }
-    choices = [
-        (" ".join(c["full_names"]), calendars[c["areaids"][0]]) for c in streetlist
+def ask_login():
+    questions = [
+        inquirer.List(
+            "login_method",
+            choices=["email", "phone"],
+            message="How do you want to login?",
+        )
     ]
-    questions = [inquirer.List("cal", choices=choices, message="Select a street")]
-    return inquirer.prompt(questions)["cal"]
+    method = inquirer.prompt(questions)["login_method"]
+
+    questions = [
+        inquirer.Text("email", message="Enter your email address")
+        if method == "email"
+        else inquirer.Text("phone", message="Enter your phone number"),
+        inquirer.Password("password", message="Enter your password"),
+    ]
+    return inquirer.prompt(questions)
 
 
-def main():
+def main(password, email, phone):
     city_id, city = ask_city()
     cal = ask_calendar(city_id)
-
-    if cal == "Search By Street":
-        cal = ask_by_street(city_id)
 
     print(
         f"""waste_collection_schedule:
@@ -83,9 +86,20 @@ def main():
     - name: citiesapps_com
       args:
         city: {city}
-        calendar: {cal}"""
+        calendar: {cal}
+        password: {password}
+        {"email: " + email if email else "phone: " + phone}"""
     )
 
-
 if __name__ == "__main__":
-    main()
+    credentials = ask_login()
+    app = CitiesAppsCom.CitiesApps(
+        password=credentials["password"],
+        email=credentials.get("email"),
+        phone=credentials.get("phone"),
+    )
+    main(
+        password=credentials["password"],
+        email=credentials.get("email"),
+        phone=credentials.get("phone"),
+    )

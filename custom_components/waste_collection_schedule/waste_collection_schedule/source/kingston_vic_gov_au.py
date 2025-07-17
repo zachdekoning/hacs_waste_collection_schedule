@@ -41,7 +41,12 @@ API_URLS = {
     "schedule": "https://www.kingston.vic.gov.au/ocapi/Public/myarea/wasteservices?geolocationid={}&ocsvclang=en-AU",
 }
 HEADERS = {
-    "user-agent": "Mozilla/5.0",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Google Chrome\";v=\"137\", \"Chromium\";v=\"137\", \"Not/A)Brand\";v=\"24\"",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "cross-site",
+    "sec-fetch-user": "?1",
+    "sec-fetch-dest": "document",
 }
 ICON_MAP = {
     "General waste (landfill)": "mdi:trash-can",
@@ -66,7 +71,7 @@ class Source:
         # 'collection' api call seems to require an ASP.Net_sessionID, so obtain the relevant cookie
         s = requests.Session()
         q = requote_uri(str(API_URLS["session"]))
-        r0 = s.get(q, headers = HEADERS)
+        s.get(q, headers = HEADERS)
 
         # Do initial address search
         address = "{} {} {} {}".format(self.street_number, self.street_name, self.suburb, self.post_code)

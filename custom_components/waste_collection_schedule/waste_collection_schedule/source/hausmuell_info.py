@@ -143,7 +143,13 @@ SUPPORTED_PROVIDERS = [
 ]
 
 EXTRA_INFO = [
-    {"title": p["title"], "url": p["url"], "country": "de"} for p in SUPPORTED_PROVIDERS
+    {
+        "title": p["title"],
+        "url": p["url"],
+        "country": "de",
+        "default_params": {"subdomain": p["subdomain"]},
+    }
+    for p in SUPPORTED_PROVIDERS
 ]
 
 
@@ -185,6 +191,24 @@ def replace_special_chars_args(d: dict, replace_func=replace_special_chars) -> d
     return to_return
 
 
+PARAM_TRANSLATIONS = {
+    "de": {
+        "subdomain": "Subdomain",
+        "ort": "Ort",
+        "ortsteil": "Ortsteil",
+        "strasse": "Straße",
+        "hausnummer": "Hausnummer",
+    },
+    "en": {
+        "subdomain": "Subdomain",
+        "ort": "City",
+        "ortsteil": "District",
+        "strasse": "Street",
+        "hausnummer": "House number",
+    },
+}
+
+
 class Source:
     def __init__(
         self,
@@ -200,8 +224,6 @@ class Source:
         self._ortsteil: str = ortsteil if ortsteil else ""
 
         self._api_url: str = API_URL.format(subdomain)
-        self._search_url: str = self._api_url + "search/"
-        self._ics_url: str = self._api_url + "ics/ics.php"
         self._ics = ICS()
 
     def _get_elemts(self, response_text: str) -> list[str]:
@@ -278,6 +300,11 @@ class Source:
         }
 
         r = requests.get(self._api_url)
+        if r.url != self._api_url:
+            self._api_url = r.url
+        self._search_url: str = self._api_url + "search/"
+        self._ics_url: str = self._api_url + "ics/ics.php"
+
         soup = BeautifulSoup(r.text, "html.parser")
         for i in soup.find_all("input"):
             if i.get("name").startswith("showBins"):

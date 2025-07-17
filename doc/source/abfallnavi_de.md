@@ -24,7 +24,8 @@ waste_collection_schedule:
 *(string) (required)*
 
 **strasse**  
-*(string) (required)*
+*(string) (optional)*  
+*required if the service provider website requests it*
 
 **hausnummer**  
 *(string | Integer) (optional)*
@@ -42,6 +43,45 @@ waste_collection_schedule:
 ```
 
 ## How to get the source arguments
+
+Your serviceID can be found in the list below. `ort`, `strasse` and `hausnummer` (only supply if needed) should match the values of the serviceproviders search form.
+
+<!--Begin of service section-->
+|Region|service|
+|-|-|
+| Stadt Aachen | aachen |
+| Abfallwirtschaft Stadt Nürnberg | nuernberg |
+| Abfallwirtschaftsbetrieb Bergisch Gladbach | aw-bgl2 |
+| AWA Entsorgungs GmbH | zew2 |
+| AWG Kreis Warendorf | krwaf |
+| Bergischer Abfallwirtschaftverbund | bav |
+| Kreis Coesfeld | coe |
+| Stadt Cottbus | cottbus |
+| Dinslaken | din |
+| Stadt Dorsten | dorsten |
+| EGW Westmünsterland | wml2 |
+| Gütersloh (Stadt) | gt2 |
+| Kreis Gütersloh GEG | krwaf |
+| Halver | hlv |
+| Kreis Heinsberg | krhs |
+| Kronberg im Taunus | kronberg |
+| MHEG Mülheim an der Ruhr | muelheim |
+| Stadt Norderstedt | nds |
+| Kreis Pinneberg | pi |
+| Gemeinde Roetgen | roe |
+| Stadt Solingen | solingen |
+| STL Lüdenscheid | stl |
+| GWA - Kreis Unna mbH | unna |
+| Kreis Viersen | viersen |
+| WBO Wirtschaftsbetriebe Oberhausen | oberhausen |
+| ZEW Zweckverband Entsorgungsregion West | zew2 |
+| Stadt Cuxhaven | cux |
+| Stadt Frankenthal | frankenthal |
+<!--End of service section-->
+
+
+
+### Using the wizard
 
 There is a script with an interactive command line interface which generates the required source configuration:
 
